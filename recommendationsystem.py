@@ -1,6 +1,8 @@
 import csv
 import re
-
+import networkx as nx
+G=nx.Graph()
+MG=nx.MultiGraph()
 
 hashmap1={} #store user and their friends
 usermappinghashmap={}
@@ -17,6 +19,7 @@ with open('user_list.csv', 'rb') as csvfile:
           usermappinghashmap[usernumber]=useroriginal
 
 
+#Map the videos watches by each user and create a map
 with open ('scores_with_videoids_top50000.csv','rb') as csvfile:
   reader = csv.reader(csvfile)
   for row in reader:
@@ -35,6 +38,7 @@ with open('edge_list.csv', 'rb') as csvfile:
        	   edge=line[0]
            friend = line[1]
            similarity = line[2]
+           MG.add_weighted_edges_from([(edge,friend,float(similarity))])
            similarityFriend = similarity+"@"+friend
            if edge in hashmap1:
              edgemaplist = hashmap1[edge]
@@ -44,14 +48,17 @@ with open('edge_list.csv', 'rb') as csvfile:
            hashmap1[edge]=edgemaplist
 
 
+print 'Number of nodes '+ str(MG.number_of_nodes())
+print 'Number of edges '+ str(MG.number_of_edges())
+
 uID = str(input("What's your user ID? "))
 
 #for edgekey in hashmap1.keys():
 moviesWatchedbyFriend=[]
 
-for friend in hashmap1[uID]: #iterating over the friends list of each user
-  similarity = re.split('@',friend)[0]
-  friendId = re.split('@',friend)[1]
+friendsOfUser = MG.neighbors(uID)[1:100]
+
+for friendId in friendsOfUser: #iterating over the friends list of each user
   if friendId in usermappinghashmap.keys():
     friendMappedName = usermappinghashmap[friendId]
     if friendMappedName in userMoviesWatchedMap.keys():
@@ -60,5 +67,7 @@ userVideoRecommendations[uID]=moviesWatchedbyFriend
 
 
 print userVideoRecommendations 
+
+
 
 
